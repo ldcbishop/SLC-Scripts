@@ -1,0 +1,3 @@
+#Igoring all .xlsx files
+*.xlsx
+*.zip
