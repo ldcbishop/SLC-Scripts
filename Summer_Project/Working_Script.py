@@ -8,18 +8,87 @@ Primary Coder: Logan D.C. Bishop
 Any questions/concerns about this code can be directed to ldcbishop@gmail.com
 
 Working version of openpyxl requires python 2.2 usage.  Can be run with "python" command.
+
+Not robust for widely varied excel files
+
+Need to phase out rosters, only look at attendance files.
 """
 import sys #here to allow argument passing
 import os #included to splite filename from extension
+import re #regex package
 from openpyxl import Workbook
 from openpyxl.compat import range
 from openpyxl import load_workbook
 
+def searchWorkBook(work_sheet, search_string):
+	#Assume Unique values are in the first 30 columns and first 50 rows
+	search_space = list(work_sheet.iter_rows('A1:M50'))
+	print work_sheet
+	for x in search_space:
+		for y in x:
+			if str(y.value).lower() == search_string.lower():
+				return str(y)[18:-1]
+	return '00'
+
 src_filename = sys.argv[1]
-wb_origin = load_workbook(src_filename) #First argument should be script names
-wb = Workbook() #Create destination workbook
-dest_filename = os.path.splitext(src_filename)[0]+"_parsed.xlsx"
-#Test print to see if system is pulling the correct name 
-#print src_filename
-#print dest_filename
+wb_origin = load_workbook(src_filename, data_only=True) #First argument should be script names
+
+
+#Going to need a workbook for roughly each sheet present in a source work book
+for sheet in wb_origin :
+
+	wb_output = Workbook() #Create destination workbook
+	#sheet_output = wb_output.active() #pulls active worksheet to pool data
+	#dest_filename = os.path.splitext(src_filename)[0]+"_parsed.xlsx" #Name that the new workbook will be saved under
+
+	"""
+	CCYYSS using regex;  Might be unique for each worksheet so it needs to be handled on a worksheet by worksheet basis
+	Title is located in A1
+	"""
+
+	semester_year = sheet['A1'].value
+	year_re = re.compile('20[0-9][0-9]')
+	year = year_re.findall(semester_year)[0]
+
+	#Two cases, either fall or Spring
+	fall_re = re.compile('[Ff]+[Aa][Ll][Ll]')
+	semester = fall_re.search(semester_year)
+	if str(type(semester)) == "<type '_sre.SRE_Match'>" :
+		CCYYS = year + '8'
+	else :
+		CCYYS = year + '2'
+
+	#First value in each row
+	#print CCYYS
+
+	"""
+	Make a function for this
+	"""
+
+	"""
+	Need to pull the set of all unique numbers contained within a sheet
+	"""
+	un_string = sheet['A2'].value
+	un_re = re.compile('[0-9][0-9][0-9][0-9][0-9]')
+	unique_Num_list = un_re.findall(str(un_string))
+	"""
+	Grabs list of all unique numbers in the spreadsheet
+	"""
+	print searchWorkBook(sheet, 'Dicks')
+
+
+"""
+#Test print to see if system is pulling the correct name
+print src_filename
+print dest_filename
+"""
+
+"""
+A function to find a key word in an excel spreadsheet and return its coordinate
+@param: worksheet, and a valid string to look for.
+@return: a coordinate string
+"""
+
+
+
 
