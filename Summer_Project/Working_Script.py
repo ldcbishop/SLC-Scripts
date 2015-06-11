@@ -22,12 +22,12 @@ from openpyxl import load_workbook
 
 def searchWorkBook(work_sheet, search_string):
 	#Assume Unique values are in the first 30 columns and first 50 rows
-	search_space = list(work_sheet.iter_rows('A1:M50'))
-	print work_sheet
+	search_space = list(work_sheet.iter_rows('A1:M7'))
+	cell_re = re.compile('[A-Z]+[0-9]+')
 	for x in search_space:
 		for y in x:
 			if str(y.value).lower() == search_string.lower():
-				return str(y)[18:-1]
+				return cell_re.findall(str(y))[0]
 	return '00'
 
 src_filename = sys.argv[1]
