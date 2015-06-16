@@ -12,6 +12,8 @@ Working version of openpyxl requires python 2.2 usage.  Can be run with "python"
 Not robust for widely varied excel files
 
 Need to phase out rosters, only look at attendance files.
+
+output is CCYYS, 
 """
 import sys #here to allow argument passing
 import os #included to splite filename from extension
@@ -29,6 +31,14 @@ def searchWorkBook(work_sheet, search_string):
 			if str(y.value).lower() == search_string.lower():
 				return cell_re.findall(str(y))[0]
 	return '00'
+
+def translateCoord(cell):
+	#Take a string, return a numerical tuple
+	alphabetConvString = 64
+	row = cell[1:]
+	column = ord(cell[0]) - alphabetConvString 
+	return (int(row), int(column))
+
 
 src_filename = sys.argv[1]
 wb_origin = load_workbook(src_filename, data_only=True) #First argument should be script names
@@ -74,7 +84,17 @@ for sheet in wb_origin :
 	"""
 	Grabs list of all unique numbers in the spreadsheet
 	"""
-	print searchWorkBook(sheet, 'Dicks')
+
+	#Where the word date is located
+	date_origin = translateCoord(searchWorkBook(sheet, 'date:'))
+	#Name is leftmost cell, followed by EID and Unique #
+	name_origin = translateCoord(searchWorkBook(sheet, 'student'))
+
+	"""
+	print "My searchable index is " + searchWorkBook(sheet, 'date:')
+	print "The value I found at this index " + str(sheet.cell(row = date_origin[0], column = date_origin[1]).value)
+	print "The index I am reporting " + str(date_origin)
+	"""
 
 
 """
