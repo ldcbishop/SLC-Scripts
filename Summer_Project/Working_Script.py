@@ -29,13 +29,13 @@ class Student:
 	unique_num = 0
 	uteid = ""
 
-	def __init__(StuName, StuUN, Stu_uteid):
+	def __init__(StuName, Stu_uteid, StuUN):
 		self.name = StuName
 		self.unique_num = StuUN
 		self.uteid = Stu_uteid
 
 	def returnSelf():
-		return (self.name, self.unique_num, self.uteid)
+		return (self.name, self.uteid, self.unique_num)
 
 """
 A function to find a key word in an excel spreadsheet and return its coordinate
@@ -44,13 +44,14 @@ A function to find a key word in an excel spreadsheet and return its coordinate
 """
 def searchWorkBook(work_sheet, search_string):
 	#Assume Unique values are in the first 30 columns and first 50 rows
-	search_space = list(work_sheet.iter_rows('A1:M7'))
+	search_space = list(work_sheet.iter_rows('A1:M50'))
 	cell_re = re.compile('[A-Z]+[0-9]+')
+	search_string = search_string.lower()
 	for x in search_space:
 		for y in x:
-			if str(y.value).lower() == search_string.lower():
+			if search_string in str(y.value).lower():
 				return cell_re.findall(str(y))[0]
-	return '00'
+	return 'A1'
 
 """
 A function to take the string excel coordinate and translate it into numerical coordinates
@@ -59,9 +60,9 @@ A function to take the string excel coordinate and translate it into numerical c
 """
 def translateCoord(cell):
 	#Take a string, return a numerical tuple
-	alphabetConvString = 64
+	alphabetConvString = 62
 	row = cell[1:]
-	column = ord(cell[0]) - alphabetConvString 
+	column = ord(cell[0]) - alphabetConvString
 	return (int(row), int(column))
 
 """
@@ -93,7 +94,10 @@ for sheet in wb_origin :
 
 	active_sheet = wb_output.create_sheet()
 
+	if(sheet['D4'].value == 0)
+		continue
 	
+	student_dict = {}
 	semester_year = sheet['A1'].value
 	year_re = re.compile('20[0-9][0-9]')
 	year = year_re.findall(semester_year)[0]
@@ -113,18 +117,33 @@ for sheet in wb_origin :
 	unique_Num_list = un_re.findall(str(un_string))
 
 	#Where the word date is located
-	date_origin = translateCoord(searchWorkBook(sheet, 'date:'))
+	date_origin = translateCoord(searchWorkBook(sheet, 'Date'))
 	#Name is leftmost cell, followed by EID and Unique #
 	name_origin = translateCoord(searchWorkBook(sheet, 'student'))
 
-	ex = parseAndBuildDate("T 9/16") 
+	#All the dates loop
+	current_column = date_origin[1] + 1
+	loop_date = sheet.cell(row = date_origin[0], column = current_column).value
+	current_row = student_origin[0] + 1
+	
+	#Loops through all dates in a sheet
+	while(loop_date != None):
 
-	print ex + year
-	"""
-	print "My searchable index is " + searchWorkBook(sheet, 'date:')
-	print "The value I found at this index " + str(sheet.cell(row = date_origin[0], column = date_origin[1]).value)
-	print "The index I am reporting " + str(date_origin)
-	"""
+		#check to see if ANY students attended
+		if(sheet.cell(row = date_origin[0] + 1, column = current_column).value) == 0):
+			continue
+
+		current_date = parseAndBuildDate(loop_date) + year
+
+		#Loops through all students in a sheet
+		student_loop_check_column = student_origin + 1
+		student_loop_check = sheet.cell(row = current_row, column = student_loop_check_column).value 
+		while(student_loop_check != None):
+			student_attendance_var = ssheet.cell(row = current_row, column = current_column).value 
+
+	
+
+
 
 """
 Current print format
@@ -135,6 +154,9 @@ cell = sheet.cell(row = x, column = y)
 
 Setting a value:
 cell.value = "hello, world"
+
+cmd string:
+python Working_Script.py myWork_book.xlsx
 """
 
 
