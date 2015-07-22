@@ -85,8 +85,8 @@ Take a pair of coordinates for a unique student and return pertinent values
 @return: a tuple of the name, uteid, and unique numbers
 """
 def getStudentVals(r, c):
-	name = sheet.cell(row = r, column = c).value
-	uteid = sheet.cell(row = r, column = c + 1).value
+	name = str(sheet.cell(row = r, column = c).value)
+	uteid = str(sheet.cell(row = r, column = c + 1).value)
 	unique = sheet.cell(row = r, column = c + 2).value
 	return (name, uteid, unique)
 
@@ -171,8 +171,7 @@ for sheet in wb_origin :
 				continue
 
 			if(current_row not in student_dict.keys()):
-				current_student = Student('bob', 'bl178', 666)
-				print getStudentVals(current_row, student_origin[1]-2)
+				current_student = Student(*getStudentVals(current_row, student_origin[1]-2))
 				student_dict[current_row] = current_student
 
 			print student_dict.keys()
