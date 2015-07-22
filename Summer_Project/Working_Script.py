@@ -29,13 +29,17 @@ class Student:
 	unique_num = 0
 	uteid = ""
 
-	def __init__(StuName, Stu_uteid, StuUN):
+	def __init__(self, StuName, Stu_uteid, StuUN):
 		self.name = StuName
 		self.unique_num = StuUN
 		self.uteid = Stu_uteid
+		print "I made a student!!"
 
-	def returnSelf():
+	def returnSelf(self):
 		return (self.name, self.uteid, self.unique_num)
+
+	def printMyVals(self):
+			print 'My name is: '+ self.name, '\nMy UTeid is: ' + self.uteid, '\nMy unique # is: ' + str(self.unique_num)
 
 """
 A function to find a key word in an excel spreadsheet and return its coordinate
@@ -76,6 +80,17 @@ def parseAndBuildDate(bad_date):
 	return month_day[0]+'/'+month_day[1]+'/'
 
 """
+Take a pair of coordinates for a unique student and return pertinent values
+@param: r and c, which correspond to row and column
+@return: a tuple of the name, uteid, and unique numbers
+"""
+def getStudentVals(r, c):
+	name = sheet.cell(row = r, column = c).value
+	uteid = sheet.cell(row = r, column = c + 1).value
+	unique = sheet.cell(row = r, column = c + 2).value
+	return (name, uteid, unique)
+
+"""
 System Main Method
 """
 
@@ -94,7 +109,9 @@ for sheet in wb_origin :
 
 	active_sheet = wb_output.create_sheet()
 
-	if(sheet['D4'].value == 0)
+	sheet_title = sheet.title
+	if(sheet['D4'].value == 0):
+		print 'No students in ', src_filename, " :: ", sheet_title
 		continue
 	
 	student_dict = {}
@@ -119,29 +136,55 @@ for sheet in wb_origin :
 	#Where the word date is located
 	date_origin = translateCoord(searchWorkBook(sheet, 'Date'))
 	#Name is leftmost cell, followed by EID and Unique #
-	name_origin = translateCoord(searchWorkBook(sheet, 'student'))
-
+	temp = translateCoord(searchWorkBook(sheet, 'uteid'))
+	student_origin = (temp[0], temp[1] - 1)
+	print student_origin
 	#All the dates loop
 	current_column = date_origin[1] + 1
 	loop_date = sheet.cell(row = date_origin[0], column = current_column).value
-	current_row = student_origin[0] + 1
-	
-	#Loops through all dates in a sheet
-	while(loop_date != None):
 
+	#Loops through all dates in a sheet
+	loop_break = 0
+	while(loop_date != None):
+		current_row = student_origin[0] + 1
+		loop_break = loop_break + 1
+		if(loop_break > 5):
+			break
 		#check to see if ANY students attended
-		if(sheet.cell(row = date_origin[0] + 1, column = current_column).value) == 0):
+
+		if(sheet.cell(row = date_origin[0] + 1, column = current_column).value == 0):
+			print 'No students showed up'
+			current_column = current_column + 1
+			loop_date = sheet.cell(row = date_origin[0], column = current_column).value
 			continue
 
 		current_date = parseAndBuildDate(loop_date) + year
 
 		#Loops through all students in a sheet
-		student_loop_check_column = student_origin + 1
-		student_loop_check = sheet.cell(row = current_row, column = student_loop_check_column).value 
+		student_loop_check = sheet.cell(row = current_row, column = student_origin[1]).value 
+		print student_loop_check
 		while(student_loop_check != None):
-			student_attendance_var = ssheet.cell(row = current_row, column = current_column).value 
 
-	
+			#Check to see if the student attended
+			if(sheet.cell(row = current_row, column = current_column).value == 0):
+				current_row = current_row + 1
+				continue
+
+			if(current_row not in student_dict.keys()):
+				current_student = Student('bob', 'bl178', 666)
+				print getStudentVals(current_row, student_origin[1]-2)
+				student_dict[current_row] = current_student
+
+			print student_dict.keys()
+			current_student = student_dict[current_row]
+			current_student.printMyVals()
+
+			print ''
+			current_row = current_row + 1
+			student_loop_check = sheet.cell(row = current_row, column = student_origin[1]).value 
+			#create a write to new sheet function
+		current_column = current_column + 1
+		loop_date = sheet.cell(row = date_origin[0], column = current_column).value
 
 
 
