@@ -30,7 +30,7 @@ class Student:
 	uteid = ""
 
 	def __init__(self, StuName, Stu_uteid, StuUN):
-		self.name = StuName
+		self.name = re.sub(';', ',', StuName)
 		self.unique_num = StuUN
 		self.uteid = Stu_uteid
 		#print "I made a student!!"
@@ -39,7 +39,7 @@ class Student:
 		return (self.name, self.uteid, self.unique_num)
 
 	def printMyVals(self):
-			print 'My name is: '+ self.name, '\nMy UTeid is: ' + self.uteid, '\nMy unique # is: ' + str(self.unique_num)
+		print 'My name is: '+ self.name, '\nMy UTeid is: ' + self.uteid, '\nMy unique # is: ' + str(self.unique_num)
 
 class OutputSheet:
 	mySheet = ''
@@ -66,6 +66,8 @@ class OutputSheet:
 		self.mySheet.cell(row = printRow, column = 5).value = attn_date
 		self.row_ptr = printRow + 1
 
+	def sayName(self):
+		return self.mySheet.title
 
 """
 A function to find a key word in an excel spreadsheet and return its coordinate
@@ -180,7 +182,7 @@ for sheet in wb_origin :
 		#check to see if ANY students attended
 
 		if(sheet.cell(row = date_origin[0] + 1, column = current_column).value == 0):
-			print 'No students showed up'
+			print '\tNo students showed up for sheet: ' + sheet.title +' :: ' + loop_date
 			current_column = current_column + 1
 			loop_date = sheet.cell(row = date_origin[0], column = current_column).value
 			continue
@@ -194,26 +196,26 @@ for sheet in wb_origin :
 			#Check to see if the student attended
 			if(sheet.cell(row = current_row, column = current_column).value == 0):
 				current_row = current_row + 1
+				student_loop_check = sheet.cell(row = current_row, column = student_origin[1]).value
 				continue
 
-			if(current_row not in student_dict.keys() and student_loop_check != None):
+			if(current_row not in student_dict.keys()):
 				current_student = Student(*getStudentVals(current_row, student_origin[1]-2))
 				student_dict[current_row] = current_student
 
 			student_info = student_dict[current_row].returnSelf()
 			active_sheet.printInfoToSheet(*student_info, attn_date = current_date)
-			print current_row
 			current_row = current_row + 1
 			student_loop_check = sheet.cell(row = current_row, column = student_origin[1]).value 
-			print student_loop_check
 			#create a write to new sheet function
 		current_column = current_column + 1
 		loop_date = sheet.cell(row = date_origin[0], column = current_column).value
 
 #Save all changes to the workbook at the end
 dest_filename = os.path.splitext(src_filename)[0]+"_parsed.xlsx" #Name that the new workbook will be saved under
+wb_output.remove_sheet(wb_output.active)
 wb_output.save(dest_filename)
-print 'Finished ' + src_filename
+print 'Finished ' + src_filename + '\n'
 
 """
 Current print format
