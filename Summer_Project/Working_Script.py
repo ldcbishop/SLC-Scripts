@@ -33,13 +33,39 @@ class Student:
 		self.name = StuName
 		self.unique_num = StuUN
 		self.uteid = Stu_uteid
-		print "I made a student!!"
+		#print "I made a student!!"
 
 	def returnSelf(self):
 		return (self.name, self.uteid, self.unique_num)
 
 	def printMyVals(self):
 			print 'My name is: '+ self.name, '\nMy UTeid is: ' + self.uteid, '\nMy unique # is: ' + str(self.unique_num)
+
+class OutputSheet:
+	mySheet = ''
+	row_ptr = 1
+	myCCYYS = ''
+
+	def __init__(self, sheet, semester):
+		self.mySheet = sheet
+		self.myCCYYS = semester
+		#Print header to output sheet
+		self.mySheet['A1'] = 'ccyys'
+		self.mySheet['B1'] = 'eid'
+		self.mySheet['C1'] = 'name'
+		self.mySheet['D1'] = 'unique'
+		self.mySheet['E1'] = 'date'
+		self.row_ptr = 2
+
+	def printInfoToSheet(self, name, uteid, unique_num, attn_date):
+		printRow = self.row_ptr
+		self.mySheet.cell(row = printRow, column = 1).value = self.myCCYYS
+		self.mySheet.cell(row = printRow, column = 2).value = uteid
+		self.mySheet.cell(row = printRow, column = 3).value = name
+		self.mySheet.cell(row = printRow, column = 4).value = unique_num
+		self.mySheet.cell(row = printRow, column = 5).value = attn_date
+		self.row_ptr = printRow + 1
+
 
 """
 A function to find a key word in an excel spreadsheet and return its coordinate
@@ -102,14 +128,10 @@ src_filename = sys.argv[1]
 wb_origin = load_workbook(src_filename, data_only=True) #First argument should be script names
 wb_output = Workbook() #Create destination workbook
 	#sheet_output = wb_output.active() #pulls active worksheet to pool data
-	#dest_filename = os.path.splitext(src_filename)[0]+"_parsed.xlsx" #Name that the new workbook will be saved under
 #Work book relations are now 1:1 with each sheet being 1:1
 
 for sheet in wb_origin :
 
-	active_sheet = wb_output.create_sheet()
-
-	sheet_title = sheet.title
 	if(sheet['D4'].value == 0):
 		print 'No students in ', src_filename, " :: ", sheet_title
 		continue
@@ -128,6 +150,10 @@ for sheet in wb_origin :
 		CCYYS = year + '2'
 
 
+	temp_sheet = wb_output.create_sheet()
+	temp_sheet.title = sheet.title + "_parsed"
+	active_sheet = OutputSheet(temp_sheet, CCYYS)
+
 	#Grabs list of all unique numbers in the spreadsheet
 	un_string = sheet['A2'].value
 	un_re = re.compile('[0-9][0-9][0-9][0-9][0-9]')
@@ -135,10 +161,11 @@ for sheet in wb_origin :
 
 	#Where the word date is located
 	date_origin = translateCoord(searchWorkBook(sheet, 'Date'))
+
 	#Name is leftmost cell, followed by EID and Unique #
 	temp = translateCoord(searchWorkBook(sheet, 'uteid'))
 	student_origin = (temp[0], temp[1] - 1)
-	print student_origin
+	#print student_origin
 	#All the dates loop
 	current_column = date_origin[1] + 1
 	loop_date = sheet.cell(row = date_origin[0], column = current_column).value
@@ -162,7 +189,6 @@ for sheet in wb_origin :
 
 		#Loops through all students in a sheet
 		student_loop_check = sheet.cell(row = current_row, column = student_origin[1]).value 
-		print student_loop_check
 		while(student_loop_check != None):
 
 			#Check to see if the student attended
@@ -170,22 +196,24 @@ for sheet in wb_origin :
 				current_row = current_row + 1
 				continue
 
-			if(current_row not in student_dict.keys()):
+			if(current_row not in student_dict.keys() and student_loop_check != None):
 				current_student = Student(*getStudentVals(current_row, student_origin[1]-2))
 				student_dict[current_row] = current_student
 
-			print student_dict.keys()
-			current_student = student_dict[current_row]
-			current_student.printMyVals()
-
-			print ''
+			student_info = student_dict[current_row].returnSelf()
+			active_sheet.printInfoToSheet(*student_info, attn_date = current_date)
+			print current_row
 			current_row = current_row + 1
 			student_loop_check = sheet.cell(row = current_row, column = student_origin[1]).value 
+			print student_loop_check
 			#create a write to new sheet function
 		current_column = current_column + 1
 		loop_date = sheet.cell(row = date_origin[0], column = current_column).value
 
-
+#Save all changes to the workbook at the end
+dest_filename = os.path.splitext(src_filename)[0]+"_parsed.xlsx" #Name that the new workbook will be saved under
+wb_output.save(dest_filename)
+print 'Finished ' + src_filename
 
 """
 Current print format
