@@ -104,7 +104,7 @@ Take a date in the origianl format e.g. 9_16 and return a properly formatted dat
 """
 def parseAndBuildDate(rough_date, year):
 	bad_date = str(rough_date)
-	if(len(bad_date) > 7):
+	if(len(bad_date) > 10):
 		return bad_date[5:7] + '/' + bad_date[8:10] + '/' +year
 	alt_date_re = re.compile('[0-9]+\/[0-9]+\/[0-9]+')
 	date_re = re.compile('[0-9]+\/[0-9]+')
@@ -150,10 +150,10 @@ for sheet in wb_origin :
 	try:
 		year = year_re.findall(semester_year)[0]
 	except TypeError:
-		print 'Non-Attendance Sheet'
+		print '\t\tNon-Attendance Sheet'
 		continue
 	except IndexError:
-		print 'Malformed sheet: ' + sheet.title
+		print '\t\tMalformed sheet: ' + sheet.title
 		continue
 
 	#Two cases, either fall or Spring
@@ -205,12 +205,21 @@ for sheet in wb_origin :
 
 		#Loops through all students in a sheet
 		student_loop_check = sheet.cell(row = current_row, column = student_origin[1]).value 
+		interim_attendance_check = attendance_check
 		while(student_loop_check != None):
 
 			#Check to see if the student attended
-			if(sheet.cell(row = current_row, column = current_column).value == 0 or sheet.cell(row = current_row, column = current_column).value == None):
+			try:
+				att = int(sheet.cell(row = current_row, column = current_column).value)
+			except Exception, e:
+				#print 'There was a NoneType'
+				#print student_loop_check
+				att = 0
+			
+			if(att == 0):
 				current_row = current_row + 1
 				student_loop_check = sheet.cell(row = current_row, column = student_origin[1]).value
+				#print "Current_row: " + str(current_row) + " Student value: " + str(sheet.cell(row = current_row-1, column = current_column).value)
 				continue
 
 			if(current_row not in student_dict.keys()):
@@ -223,13 +232,14 @@ for sheet in wb_origin :
 			current_row = current_row + 1
 			student_loop_check = sheet.cell(row = current_row, column = student_origin[1]).value 
 			#create a write to new sheet function
-		print current_row
+		if(attendance_check - interim_attendance_check != daily_attendance):
+			print '********The attendance values do not match; Daily attendence is ' + str(daily_attendance) + 'and the counted attendence is ' + str(attendance_check - interim_attendance_check) + ' on ' + current_date 
 		current_column = current_column + 1
 		loop_date = sheet.cell(row = date_origin[0], column = current_column).value
 	print ''
 #Save all changes to the workbook at the end
 	if(total_attend != attendance_check):
-		print '\t\t**Total Attendance: '+ str(total_attend) + ' Counted Attendance: ' + str(attendance_check) + ' Row reached: ' + str(current_row)
+		print '********Total Attendance: '+ str(total_attend) + ' Counted Attendance: ' + str(attendance_check)
 dest_filename = os.path.splitext(src_filename)[0]+"_parsed.xlsx" #Name that the new workbook will be saved under
 wb_output.remove_sheet(wb_output.active)
 wb_output.save(dest_filename)
